@@ -12,5 +12,5 @@ RUN pip install --upgrade pip
 RUN pip install -r common.txt
 COPY . /backend/
 
-# static file 
-RUN python manage.py collectstatic
+# # static file 
+# RUN python manage.py collectstatic
