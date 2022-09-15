@@ -1,20 +1,13 @@
+from argon2 import PasswordHasher
+from typing import Any, List
+
 from django.db import models
+from django.urls import reverse
+from django.core.validators import MaxLengthValidator
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import (
     AbstractBaseUser, PermissionsMixin, BaseUserManager
 )
-
-from argon2 import PasswordHasher
-from typing import Any, List
-
-
-# 시간 획일화 
-class AdminLoginTimeStemp(models.Model):
-    created_at = models.DateTimeField(auto_now=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        abstract: bool = True
 
 
 class UserManager(BaseUserManager):
@@ -36,8 +29,8 @@ class UserManager(BaseUserManager):
         return user
     
     def create_user(self, email: str, name: str, password: PasswordHasher, **extra_fields):
-        extra_fields.setdefault("is_staff", False)
-        extra_fields.setdefault("is_admin", False)
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_admin", True)
         extra_fields.setdefault("is_superuser", False)
         
         return self._create_user(email=email, name=name, password=password, **extra_fields)
@@ -55,10 +48,19 @@ class UserManager(BaseUserManager):
         return self._create_user(email=email, name=name, password=password, **extra_fields)
     
     
-class AdminUser(AbstractBaseUser, PermissionsMixin, AdminLoginTimeStemp):
+# 시간 획일화 
+class TimeStemp(models.Model):
+    created_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract: bool = True
+        
+    
+class AdminUser(AbstractBaseUser, PermissionsMixin, TimeStemp):
     email = models.EmailField(
         verbose_name=_("email"), max_length=50, 
-        blank=False, null=False, unique=True
+        blank=False, null=False, unique=True,
     )
     name = models.CharField(
         verbose_name=_("name"), max_length=6, 
@@ -67,8 +69,8 @@ class AdminUser(AbstractBaseUser, PermissionsMixin, AdminLoginTimeStemp):
 
     # 필수 setting 
     is_superuser = models.BooleanField(default=False)
-    is_staff = models.BooleanField(default=False)
-    is_admin = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=True)
+    is_admin = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
     
     EMAIL_FIELD: str = "email"
@@ -76,8 +78,48 @@ class AdminUser(AbstractBaseUser, PermissionsMixin, AdminLoginTimeStemp):
     REQUIRED_FIELDS: List[str] = ["name", "password"]
     objects: BaseUserManager[Any] = UserManager()
     
+    @property
+    def is_admin(self):
+        return self.is_staff
+    
+    def __str__(self) -> str:
+        return self.name
+    
+    # def get_absolute_url(self):
+    #     return reverse("model_detail", args=[self.pk])
+    
     def has_perms(self, perm_list, obj) -> bool:
         return True
     
     def has_module_perms(self, app_label: str) -> bool:
         return True
+    
+    class Meta:
+        db_table: str = "admin_user"
+        verbose_name = _("admin_user")
+        verbose_name_plural = _("admin_users")
+
+
+class NormalUser(TimeStemp):
+    class AdverChiose(models.TextChoices):
+        pass
+    email = models.EmailField(
+        verbose_name=_("email"), max_length=50, 
+        blank=False, null=False, unique=True,
+    )
+    password = models.CharField(_("password"), max_length=128)
+
+    adv = models.BooleanField(verbose_name=_("adv_accept"))
+    permission = models.BooleanField(verbose_name=_("permission_accept"))
+    check_email = models.BooleanField(verbose_name=_("cheking_email"))
+    
+    class Meta:
+        db_table: str = "normal_user"
+        verbose_name = _("normal_user")
+        verbose_name_plural = _("normal_users")
+
+    def __str__(self):
+        return self.email
+
+    # def get_absolute_url(self):
+    #     return reverse("", args=[self.pk])
