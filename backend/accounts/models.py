@@ -2,14 +2,12 @@ from argon2 import PasswordHasher
 from typing import Any, List
 
 from django.db import models
-from django.urls import reverse
-from django.core.validators import MaxLengthValidator
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import (
     AbstractBaseUser, PermissionsMixin, BaseUserManager
 )
 
-
+# AbstarctUser 하고 고민하고 있음 컬럼 차이가 얼마 없는데.. 흐음..
 class UserManager(BaseUserManager):
     use_in_migrations: bool = True
     
@@ -100,15 +98,12 @@ class AdminUser(AbstractBaseUser, PermissionsMixin, TimeStemp):
         verbose_name_plural = _("admin_users")
 
 
-class NormalUser(TimeStemp):
-    class AdverChiose(models.TextChoices):
-        pass
+class NormalUser(TimeStemp): 
     email = models.EmailField(
         verbose_name=_("email"), max_length=50, 
         blank=False, null=False, unique=True,
     )
     password = models.CharField(_("password"), max_length=128)
-
     adv = models.BooleanField(verbose_name=_("adv_accept"))
     permission = models.BooleanField(verbose_name=_("permission_accept"))
     check_email = models.BooleanField(verbose_name=_("cheking_email"))
