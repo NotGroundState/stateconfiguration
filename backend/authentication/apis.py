@@ -10,4 +10,3 @@ class AdminRegisterAPI(ModelViewSet):
     permission_classes = (AllowAny, )
     serializer_class = AdminUserSerializer
     
-    

@@ -5,9 +5,15 @@ from accounts.models import AdminUser, NormalUser
 class AdminUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = AdminUser
-        fields = ["email", "name", "password"]
-    
+        fields = ["email", "name", "password", "created_at", "updated_at"]
+        extra_kargs = {
+            "password": {
+                "write_only": True
+            }
+        }
+        
+    def create(self, validated_data):
+        pass 
+
     def validate(self, attrs):
-        # OrderedDict([('email', 'robots@test.com'), ('name', '황도현'), ('password', '123123123!!')])
-        print(super().validate(attrs))
-        return super().validate(attrs)
+         pass
