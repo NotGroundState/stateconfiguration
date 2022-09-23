@@ -1,9 +1,10 @@
-from typing import Dict, List
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from django.core.validators import MinLengthValidator 
 
 from accounts.models import AdminUser, NormalUser, TimeStemp
 from argon2 import PasswordHasher
+from typing import Dict, List
 
 
 class AdminRegisterSerializer(serializers.ModelSerializer):
