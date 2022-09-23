@@ -12,7 +12,7 @@ class AdminRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AdminUser
-        fields = ["email", "name", "password", "password2", "created_at", "updated_at"]
+        fields = ["email", "name", "password", "password2"]
         extra_kwargs = {
             'password' : {
                 'write_only': True,
@@ -54,7 +54,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = NormalUser
-        fields = ["email", "password", "password2", "time"]
+        fields = ["email", "password", "password2"]
         extra_kwargs = {
             'password' : {
                 'write_only': True,
