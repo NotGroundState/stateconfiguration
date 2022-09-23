@@ -1,10 +1,8 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from django.core.validators import MinLengthValidator 
 
-from accounts.models import AdminUser, NormalUser, TimeStemp
+from accounts.models import AdminUser, NormalUser
 from argon2 import PasswordHasher
-from typing import Dict, List
 
 
 class AdminRegisterSerializer(serializers.ModelSerializer):
@@ -19,36 +17,22 @@ class AdminRegisterSerializer(serializers.ModelSerializer):
                 "style": {"input_type": "password"}
             }
         }
-        
-    def validate_email(self, value: str) -> str:
-        try:
-            AdminUser.objects.get(email=value)
-        except AdminUser.DoesNotExist:
-            return value
-        else:
-            raise ValidationError(detail="존재하는 이메일 입니다")
     
-    def validate_password(self, value: str) -> str:
-        if len(value) > 8:
-            return value
-        raise ValidationError(detail="비밀번호는 8자 이상 입력해주세요!")
-
-    def validate(self, data: str) -> Dict:
-        email = data.get("email")
-        password = data.get("password")
-        password2 = data.get("password2")
+    def validate_password2(self, data):
+        if self.initial_data["password"] == data:
+            return data
+        raise ValidationError(detail="비밀번호가 같지 않습니다", code="password_mismatch")
+    
+    def create(self, validated_data):
+        del validated_data["password2"]
         
-        if self.validate_email(email):
-            if self.validate_password(password):
-                if password == password2:
-                    return {
-                        "email": email,
-                        "name": data.get("name"),                        
-                    }
-            elif password != password2:
-                raise ValidationError(detail="비밀번호가 맞는지 확인해주세요")
-          
-
+        password = validated_data.get("password")
+        user_save = AdminUser.objects.create(**validated_data)
+        user_save.set_password(password)
+        user_save.save()
+        
+        return user_save
+        
 class UserRegisterSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(style={'input_type':'password'}, write_only=True)
     

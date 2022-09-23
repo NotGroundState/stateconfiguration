@@ -9,5 +9,3 @@ class AdminRegisterAPI(ModelViewSet):
     queryset = AdminUser.objects.all()
     permission_classes = (AllowAny, )
     serializer_class = AdminRegisterSerializer
-    
-     
