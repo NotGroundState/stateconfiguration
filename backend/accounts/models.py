@@ -3,11 +3,15 @@ from typing import Any, List
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import MinLengthValidator
 from django.contrib.auth.models import (
     AbstractBaseUser, PermissionsMixin, BaseUserManager
 )
 
-# AbstarctUser 하고 고민하고 있음 컬럼 차이가 얼마 없는데.. 흐음..
+"""
+table architecutre 수정 해야함 
+"""
+
 class UserManager(BaseUserManager):
     use_in_migrations: bool = True
     
@@ -58,7 +62,11 @@ class TimeStemp(models.Model):
 class AdminUser(AbstractBaseUser, PermissionsMixin, TimeStemp):
     email = models.EmailField(
         verbose_name=_("email"), max_length=50, 
-        blank=False, null=False, unique=True,
+        blank=False, null=False, unique=True
+    )
+    password = models.CharField(
+        verbose_name=_("password"), max_length=128,
+        blank=False, null=False, validators=[MinLengthValidator(8, message="8자 이상 입력해주세요..!")]
     )
     name = models.CharField(
         verbose_name=_("name"), max_length=6, 
@@ -103,7 +111,10 @@ class NormalUser(TimeStemp):
         verbose_name=_("email"), max_length=50, 
         blank=False, null=False, unique=True,
     )
-    password = models.CharField(_("password"), max_length=128)
+    password = models.CharField(
+        verbose_name=_("password"), max_length=128,
+        blank=False, null=False, validators=[MinLengthValidator(8, message="8자 이상 입력해주세요..!")]
+    )
     adv = models.BooleanField(verbose_name=_("adv_accept"))
     permission = models.BooleanField(verbose_name=_("permission_accept"))
     check_email = models.BooleanField(verbose_name=_("cheking_email"))
