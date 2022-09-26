@@ -5,7 +5,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinLengthValidator
 from django.contrib.auth.models import (
-    AbstractBaseUser, PermissionsMixin, BaseUserManager
+    AbstractBaseUser, PermissionsMixin, BaseUserManager, UserManager
 )
 
 """
@@ -15,10 +15,7 @@ table architecutre 수정 해야함
 class UserManager(BaseUserManager):
     use_in_migrations: bool = True
     
-    def _create_superuser(self, email: str, name: str, password: PasswordHasher, **extra_field):
-        if not email:
-            raise ValueError("이미 이메일이 존재합니다")
-        
+    def _create_superuser(self, email: str, name: str, password: PasswordHasher, **extra_field):           
         user = self.model(
             email=self.normalize_email(email),
             name=name,
@@ -29,7 +26,7 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         
         return user
-    
+
     def create_superuser(self, email: str, name: str, password: PasswordHasher, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_admin", True)
@@ -95,15 +92,19 @@ class AdminUser(AbstractBaseUser, PermissionsMixin, BasicInform):
         verbose_name_plural = _("admin_users")
 
         
-class NormalUser(BasicInform):   
+class NormalUser(BasicInform):     
+    def set_password(self, password: str) -> None:
+        self.password = PasswordHasher().hash(password)
+        self._password = self.password
+            
+    def __str__(self):
+        return self.email
+    
     class Meta:
         db_table: str = "normal_user"
         verbose_name = _("normal_user")
         verbose_name_plural = _("normal_users")
-            
-    def __str__(self):
-        return self.email
-
+                 
     # def get_absolute_url(self):
     #     return reverse("", args=[self.pk])
 

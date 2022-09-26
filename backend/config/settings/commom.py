@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     
     # third party
     'rest_framework',
+    'debug_toolbar',
+    'django_filters',
     
     # application
     'accounts',
@@ -59,7 +61,10 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
 #        'rest_framework.permissions.IsAuthenticated',
         'rest_framework.permissions.AllowAny',
-    ]
+    ],
+    "DEFAULT_FILTER_BACKENDS": (
+        "django_filters.rest_framework.DjangoFilterBackend",
+    )
 }
 
 ROOT_URLCONF = 'config.urls'
