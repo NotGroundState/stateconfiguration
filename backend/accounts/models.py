@@ -15,7 +15,7 @@ table architecutre 수정 해야함
 class UserManager(BaseUserManager):
     use_in_migrations: bool = True
     
-    def _create_user(self, email: str, name: str, password: PasswordHasher, **extra_field):
+    def _create_superuser(self, email: str, name: str, password: PasswordHasher, **extra_field):
         if not email:
             raise ValueError("이미 이메일이 존재합니다")
         
@@ -30,13 +30,6 @@ class UserManager(BaseUserManager):
         
         return user
     
-    def create_user(self, email: str, name: str, password: PasswordHasher, **extra_fields):
-        extra_fields.setdefault("is_staff", True)
-        extra_fields.setdefault("is_admin", True)
-        extra_fields.setdefault("is_superuser", False)
-        
-        return self._create_user(email=email, name=name, password=password, **extra_fields)
-    
     def create_superuser(self, email: str, name: str, password: PasswordHasher, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_admin", True)
@@ -47,11 +40,19 @@ class UserManager(BaseUserManager):
         if extra_fields.get("is_superuser") is not True:
             raise ValueError("슈퍼유저 권한은 관리자에게 문의하세요")
         
-        return self._create_user(email=email, name=name, password=password, **extra_fields)
+        return self._create_superuser(email=email, name=name, password=password, **extra_fields)
     
     
-# 시간 획일화 
-class TimeStemp(models.Model):
+
+class BasicInform(models.Model):
+    email = models.EmailField(
+        verbose_name=_("email"), max_length=50, 
+        blank=False, null=False, unique=True,
+    )
+    password = models.CharField(
+        verbose_name=_("password"), max_length=128,
+        blank=False, null=False, validators=[MinLengthValidator(8, message="8자 이상 입력해주세요..!")]
+    )
     created_at = models.DateTimeField(auto_now=True)
     updated_at = models.DateTimeField(auto_now_add=True)
 
@@ -59,15 +60,7 @@ class TimeStemp(models.Model):
         abstract: bool = True
         
     
-class AdminUser(AbstractBaseUser, PermissionsMixin, TimeStemp):
-    email = models.EmailField(
-        verbose_name=_("email"), max_length=50, 
-        blank=False, null=False, unique=True
-    )
-    password = models.CharField(
-        verbose_name=_("password"), max_length=128,
-        blank=False, null=False, validators=[MinLengthValidator(8, message="8자 이상 입력해주세요..!")]
-    )
+class AdminUser(AbstractBaseUser, PermissionsMixin, BasicInform):
     name = models.CharField(
         verbose_name=_("name"), max_length=6, 
         blank=False, null=False
@@ -83,11 +76,7 @@ class AdminUser(AbstractBaseUser, PermissionsMixin, TimeStemp):
     USERNAME_FIELD: str = "email"
     REQUIRED_FIELDS: List[str] = ["name", "password"]
     objects: BaseUserManager[Any] = UserManager()
-    
-    @property
-    def is_admin(self):
-        return self.is_staff
-    
+        
     def __str__(self) -> str:
         return self.name
     
@@ -105,27 +94,32 @@ class AdminUser(AbstractBaseUser, PermissionsMixin, TimeStemp):
         verbose_name = _("admin_user")
         verbose_name_plural = _("admin_users")
 
-
-class NormalUser(TimeStemp): 
-    email = models.EmailField(
-        verbose_name=_("email"), max_length=50, 
-        blank=False, null=False, unique=True,
-    )
-    password = models.CharField(
-        verbose_name=_("password"), max_length=128,
-        blank=False, null=False, validators=[MinLengthValidator(8, message="8자 이상 입력해주세요..!")]
-    )
-    adv = models.BooleanField(verbose_name=_("adv_accept"))
-    permission = models.BooleanField(verbose_name=_("permission_accept"))
-    check_email = models.BooleanField(verbose_name=_("cheking_email"))
-    
+        
+class NormalUser(BasicInform):   
     class Meta:
         db_table: str = "normal_user"
         verbose_name = _("normal_user")
         verbose_name_plural = _("normal_users")
-
+            
     def __str__(self):
         return self.email
 
     # def get_absolute_url(self):
     #     return reverse("", args=[self.pk])
+
+
+class NormalUserPermission(models.Model):
+    normal_user = models.OneToOneField(
+        NormalUser, on_delete=models.CASCADE, primary_key=True
+    )
+    adv = models.BooleanField(verbose_name=_("adv_accept"))
+    permission = models.BooleanField(verbose_name=_("permission_accept"))
+    check_email = models.BooleanField(verbose_name=_("cheking_email"))
+    
+    class meta:
+        db_table: str = "user_permission"
+        verbose_name = _("user_permission")
+        verbose_name_plural = _("user_permission")
+
+    def __str__(self) -> str:
+        return f"{self.normal_user}"
