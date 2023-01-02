@@ -1,8 +1,9 @@
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.generics import CreateAPIView
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .serializer import (
     AdminSerializer, UserSerializer,
@@ -44,13 +45,13 @@ class CrudAPI(ModelViewSet):
     
     
 # 회원 가입
-class AdminRegisterAPI(ModelViewSet):
+class AdminRegisterAPI(CreateAPIView):
     queryset = AdminUser.objects.all()
     permission_classes = (AllowAny, )
     serializer_class = AdminSerializer
     
     
-class UserRegisterAPI(ModelViewSet):
+class UserRegisterAPI(CreateAPIView):
     queryset = NormalUser.objects.all()
     permission_classes = (AllowAny, )
     serializer_class = UserSerializer
