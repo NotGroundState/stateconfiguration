@@ -17,6 +17,12 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.ScryptPasswordHasher',
 ]
 
+CORS_ORIGIN_WHITELIST = ['http://127.0.0.1:8080',
+                         'http://localhost:8080',
+                         'http://0.0.0.0:8080',
+                         ]
+CORS_ALLOW_CREDENTIALS = True
+
 DEBUG_TOOLBAR_CONFIG = {
     "SHOW_TOOLBAR_CALLBACK": lambda request: True,
 }
