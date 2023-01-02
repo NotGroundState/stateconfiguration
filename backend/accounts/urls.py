@@ -6,12 +6,13 @@ from . import apis
 app_name = "auth"
 router = DefaultRouter()
 
-router.register("auth", apis.AdminRegisterAPI)
-router.register("normal", apis.UserRegisterAPI)
-
-router.register("auser", apis.AdminInformAPI)
+router.register("auth-register", apis.AdminRegisterAPI)
+router.register("normal-register", apis.UserRegisterAPI)
+router.register("auth", apis.AdminInformAPI)
 router.register("user", apis.UserInformAPI)
 
 urlpatterns = [
     path("api-v1/", include(router.urls)),
+    path("api-v1/auth-login", apis.AdminLoginAPI.as_view()),
+    path("api-v1/user-login", apis.UserLoginAPI.as_view()),
 ]

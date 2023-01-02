@@ -13,4 +13,4 @@ RUN pip install -r common.txt
 COPY . /backend/
 
 # # static file 
-# RUN python manage.py collectstatic
+RUN python manage.py collectstatic

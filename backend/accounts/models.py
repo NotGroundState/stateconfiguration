@@ -1,5 +1,6 @@
 from argon2 import PasswordHasher
 from typing import Any, List
+from .model_util import location_finder
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -111,7 +112,7 @@ class NormalUser(BasicInform):
 
 class NormalUserPermission(models.Model):
     normal_user = models.OneToOneField(
-        NormalUser, on_delete=models.CASCADE, primary_key=True
+        NormalUser, on_delete=models.CASCADE, primary_key=True, unique=True
     )
     adv = models.BooleanField(verbose_name=_("adv_accept"))
     permission = models.BooleanField(verbose_name=_("permission_accept"))
@@ -124,3 +125,29 @@ class NormalUserPermission(models.Model):
 
     def __str__(self) -> str:
         return f"{self.normal_user}"
+    
+
+class LoginRecodeData(models.Model):
+    normal_user = models.OneToOneField(
+        NormalUser, on_delete=models.CASCADE, primary_key=True, unique=True
+    )
+    ip = models.CharField(max_length=15)
+    country_code = models.CharField(max_length=2, default="XX")
+    country_name = models.CharField(max_length=100, default="UNKNOWN")
+    updated_at = models.DateTimeField(auto_now_add=True)
+    
+    def recode(self, request):
+        self.ip = request.META["REMOTE_ADDR"]
+        try:
+            country = location_finder(request)
+            self.country_code = country.get("country_code", "XX")
+            self.country_name = country.get("country_name", "UNKNOWN")
+        except:
+            pass
+    
+        self.save()
+        
+    class meta:
+        db_table: str = "user_permission"
+        verbose_name = _("user_permission")
+        verbose_name_plural = _("user_permission")
